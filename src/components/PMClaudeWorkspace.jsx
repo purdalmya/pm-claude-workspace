@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';import React, { useState, useRef } from 'reacimport React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Copy, Download, Plus, ArrowRight, AlertCircle, Loader } from 'lucide-react';
 import './PMClaudeWorkspace.css';
 
