@@ -157,7 +157,6 @@ ${formData.constraints}
   };
 
   const startUpdate = () => {
-    setUpdateMode(true);
     setScreen('updating');
   };
 
@@ -202,7 +201,6 @@ Please regenerate the full PRD incorporating this new information. Update all re
         timestamp: new Date().toLocaleString(),
       }));
 
-      setUpdateMode(false);
       setUpdateData('');
       setScreen('viewing');
     } catch (error) {
@@ -228,7 +226,6 @@ Please regenerate the full PRD incorporating this new information. Update all re
     setFormData({});
     setGeneratedPRD(null);
     setValidationMessage(null);
-    setUpdateMode(false);
     setUpdateData('');
   };
 
@@ -462,7 +459,6 @@ Please regenerate the full PRD incorporating this new information. Update all re
                 <button
                   className="pm-button pm-button-secondary"
                   onClick={() => {
-                    setUpdateMode(false);
                     setScreen('viewing');
                     setUpdateData('');
                   }}
