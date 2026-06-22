@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/pm-claude-workspace/static/css/main.c6fde744.css",
+    "main.js": "/pm-claude-workspace/static/js/main.60a55259.js",
+    "static/js/453.7b8632c2.chunk.js": "/pm-claude-workspace/static/js/453.7b8632c2.chunk.js",
+    "index.html": "/pm-claude-workspace/index.html",
+    "main.c6fde744.css.map": "/pm-claude-workspace/static/css/main.c6fde744.css.map",
+    "main.60a55259.js.map": "/pm-claude-workspace/static/js/main.60a55259.js.map",
+    "453.7b8632c2.chunk.js.map": "/pm-claude-workspace/static/js/453.7b8632c2.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c6fde744.css",
+    "static/js/main.60a55259.js"
+  ]
+}
