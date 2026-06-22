@@ -117,17 +117,13 @@ ${formData.constraints}
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 2000,
-          messages: [
-            { role: 'user', content: userPrompt }
-          ],
+          brief: userPrompt,
         }),
       });
-
+    
       const data = await response.json();
       const prdText = data.content[0].text;
-
+    
       // Parse out the validation section if present
       const hasValidation = prdText.includes('BEFORE YOU GENERATE') || prdText.includes('Missing:');
       
@@ -138,7 +134,7 @@ ${formData.constraints}
         hasValidation: hasValidation,
         originalBrief: formData,
       });
-
+    
       setScreen('viewing');
     } catch (error) {
       setValidationMessage(`Error generating PRD: ${error.message}`);
@@ -146,7 +142,6 @@ ${formData.constraints}
     } finally {
       setIsGenerating(false);
     }
-  };
 
   const copyToClipboard = () => {
     const text = prdContentRef.current?.innerText || generatedPRD.content;
