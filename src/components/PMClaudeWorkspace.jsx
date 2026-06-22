@@ -3,8 +3,8 @@ import { Copy, Download, Plus, ArrowRight, AlertCircle, Loader } from 'lucide-re
 import './PMClaudeWorkspace.css';
 
 const PMClaudeWorkspace = () => {
-  const [screen, setScreen] = useState('type-select'); // type-select, form, generating, viewing, updating
-  const [prdType, setPrdType] = useState(null); // 'comprehensive' or 'short'
+  const [screen, setScreen] = useState('type-select');
+  const [prdType, setPrdType] = useState(null);
   const [formData, setFormData] = useState({});
   const [generatedPRD, setGeneratedPRD] = useState(null);
   const [validationMessage, setValidationMessage] = useState(null);
@@ -57,7 +57,6 @@ const PMClaudeWorkspace = () => {
     setIsGenerating(true);
     setScreen('generating');
 
-    // Build the brief based on PRD type
     let briefContent;
     if (prdType === 'comprehensive') {
       briefContent = `
@@ -120,13 +119,12 @@ ${formData.constraints}
           brief: userPrompt,
         }),
       });
-    
+
       const data = await response.json();
       const prdText = data.content[0].text;
-    
-      // Parse out the validation section if present
+
       const hasValidation = prdText.includes('BEFORE YOU GENERATE') || prdText.includes('Missing:');
-      
+
       setGeneratedPRD({
         content: prdText,
         type: prdType,
@@ -134,7 +132,7 @@ ${formData.constraints}
         hasValidation: hasValidation,
         originalBrief: formData,
       });
-    
+
       setScreen('viewing');
     } catch (error) {
       setValidationMessage(`Error generating PRD: ${error.message}`);
@@ -142,6 +140,7 @@ ${formData.constraints}
     } finally {
       setIsGenerating(false);
     }
+  };
 
   const copyToClipboard = () => {
     const text = prdContentRef.current?.innerText || generatedPRD.content;
@@ -179,11 +178,7 @@ Please regenerate the full PRD incorporating this new information. Update all re
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 2000,
-          messages: [
-            { role: 'user', content: `${systemPrompt}\n\n${updatePrompt}` }
-          ],
+          brief: `${systemPrompt}\n\n${updatePrompt}`,
         }),
       });
 
@@ -226,7 +221,6 @@ Please regenerate the full PRD incorporating this new information. Update all re
 
   return (
     <div className="pm-workspace">
-      {/* HEADER */}
       <header className="pm-header">
         <div className="pm-header-content">
           <h1 className="pm-logo">PM Claude Workspace</h1>
@@ -240,19 +234,12 @@ Please regenerate the full PRD incorporating this new information. Update all re
       </header>
 
       <main className="pm-main">
-        {/* TYPE SELECT SCREEN */}
         {screen === 'type-select' && (
           <div className="pm-screen type-select-screen">
             <div className="type-select-content">
               <h2>What do you need?</h2>
               <div className="type-grid">
-                <button
-                  className="type-card"
-                  onClick={() => {
-                    setPrdType('comprehensive');
-                    setScreen('form');
-                  }}
-                >
+                <button className="type-card" onClick={() => { setPrdType('comprehensive'); setScreen('form'); }}>
                   <div className="type-card-header">
                     <h3>Full PRD</h3>
                     <ArrowRight size={24} />
@@ -268,13 +255,7 @@ Please regenerate the full PRD incorporating this new information. Update all re
                   <span className="type-time">~2500 words</span>
                 </button>
 
-                <button
-                  className="type-card"
-                  onClick={() => {
-                    setPrdType('short');
-                    setScreen('form');
-                  }}
-                >
+                <button className="type-card" onClick={() => { setPrdType('short'); setScreen('form'); }}>
                   <div className="type-card-header">
                     <h3>Quick Alignment</h3>
                     <ArrowRight size={24} />
@@ -294,14 +275,11 @@ Please regenerate the full PRD incorporating this new information. Update all re
           </div>
         )}
 
-        {/* FORM SCREEN */}
         {screen === 'form' && (
           <div className="pm-screen form-screen">
             <div className="form-container">
               <h2>Let's build your {prdType === 'comprehensive' ? 'comprehensive PRD' : 'one-pager'}</h2>
-              <p className="form-subtitle">
-                The better your input, the better your PRD. Be specific. If you don't have an answer, say so.
-              </p>
+              <p className="form-subtitle">The better your input, the better your PRD. Be specific. If you don't have an answer, say so.</p>
 
               {validationMessage && (
                 <div className="pm-validation-message">
@@ -314,50 +292,28 @@ Please regenerate the full PRD incorporating this new information. Update all re
                 {fields.map(field => (
                   <div key={field.key} className="form-group">
                     <label className="form-label">{field.label}</label>
-                    <textarea
-                      className="form-input"
-                      placeholder={field.placeholder}
-                      rows={field.rows}
-                      value={formData[field.key] || ''}
-                      onChange={(e) => handleFormChange(field.key, e.target.value)}
-                    />
+                    <textarea className="form-input" placeholder={field.placeholder} rows={field.rows} value={formData[field.key] || ''} onChange={(e) => handleFormChange(field.key, e.target.value)} />
                   </div>
                 ))}
 
-                <button
-                  type="button"
-                  className="pm-button pm-button-primary"
-                  onClick={generatePRD}
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader size={18} className="spinner" />
-                      Generating...
-                    </>
-                  ) : (
-                    'Generate PRD'
-                  )}
+                <button type="button" className="pm-button pm-button-primary" onClick={generatePRD} disabled={isGenerating}>
+                  {isGenerating ? (<><Loader size={18} className="spinner" />Generating...</>) : ('Generate PRD')}
                 </button>
               </form>
             </div>
           </div>
         )}
 
-        {/* GENERATING SCREEN */}
         {screen === 'generating' && (
           <div className="pm-screen generating-screen">
             <div className="generating-content">
-              <div className="generating-spinner">
-                <div className="spinner-dot"></div>
-              </div>
+              <div className="generating-spinner"><div className="spinner-dot"></div></div>
               <h2>Generating your PRD...</h2>
               <p>This usually takes 10-15 seconds. We're thinking like a senior PM.</p>
             </div>
           </div>
         )}
 
-        {/* VIEWING SCREEN */}
         {screen === 'viewing' && generatedPRD && (
           <div className="pm-screen viewing-screen">
             <div className="prd-container">
@@ -367,27 +323,15 @@ Please regenerate the full PRD incorporating this new information. Update all re
                   <span className="prd-timestamp">{generatedPRD.timestamp}</span>
                 </div>
                 <div className="prd-actions">
-                  <button
-                    className="pm-action-btn"
-                    onClick={copyToClipboard}
-                    title="Copy to clipboard"
-                  >
+                  <button className="pm-action-btn" onClick={copyToClipboard} title="Copy to clipboard">
                     <Copy size={18} />
                     {copyFeedback ? 'Copied!' : 'Copy'}
                   </button>
-                  <button
-                    className="pm-action-btn"
-                    onClick={downloadAsMarkdown}
-                    title="Download as Markdown"
-                  >
+                  <button className="pm-action-btn" onClick={downloadAsMarkdown} title="Download as Markdown">
                     <Download size={18} />
                     Download
                   </button>
-                  <button
-                    className="pm-action-btn pm-update-btn"
-                    onClick={startUpdate}
-                    title="Update with new information"
-                  >
+                  <button className="pm-action-btn pm-update-btn" onClick={startUpdate} title="Update with new information">
                     <Plus size={18} />
                     Update
                   </button>
@@ -403,13 +347,8 @@ Please regenerate the full PRD incorporating this new information. Update all re
 
               <div className="prd-content" ref={prdContentRef}>
                 {generatedPRD.content.split('\n').map((line, idx) => {
-                  // Highlight open questions section
                   if (line.includes('OPEN QUESTIONS') || line.includes('Open Questions')) {
-                    return (
-                      <h3 key={idx} className="prd-section-highlight">
-                        {line}
-                      </h3>
-                    );
+                    return <h3 key={idx} className="prd-section-highlight">{line}</h3>;
                   }
                   if (line.startsWith('##')) {
                     return <h2 key={idx}>{line.replace(/^#+\s*/, '')}</h2>;
@@ -433,46 +372,20 @@ Please regenerate the full PRD incorporating this new information. Update all re
           </div>
         )}
 
-        {/* UPDATING SCREEN */}
         {screen === 'updating' && (
           <div className="pm-screen updating-screen">
             <div className="update-container">
               <h2>What changed?</h2>
-              <p className="update-subtitle">
-                Tell us what new information you've gathered or decisions you've made. We'll regenerate the PRD.
-              </p>
+              <p className="update-subtitle">Tell us what new information you've gathered or decisions you've made. We'll regenerate the PRD.</p>
 
-              <textarea
-                className="form-input update-input"
-                placeholder="Example: We validated that 60% of users hit this daily (not just weekly). Also confirmed iOS launch needs to wait until Q2. Updated: timeline now reflects phased rollout..."
-                rows={8}
-                value={updateData}
-                onChange={(e) => setUpdateData(e.target.value)}
-              />
+              <textarea className="form-input update-input" placeholder="Example: We validated that 60% of users hit this daily (not just weekly). Also confirmed iOS launch needs to wait until Q2. Updated: timeline now reflects phased rollout..." rows={8} value={updateData} onChange={(e) => setUpdateData(e.target.value)} />
 
               <div className="update-actions">
-                <button
-                  className="pm-button pm-button-secondary"
-                  onClick={() => {
-                    setScreen('viewing');
-                    setUpdateData('');
-                  }}
-                >
+                <button className="pm-button pm-button-secondary" onClick={() => { setScreen('viewing'); setUpdateData(''); }}>
                   Cancel
                 </button>
-                <button
-                  className="pm-button pm-button-primary"
-                  onClick={submitUpdate}
-                  disabled={!updateData.trim() || isGenerating}
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader size={18} className="spinner" />
-                      Updating...
-                    </>
-                  ) : (
-                    'Regenerate PRD'
-                  )}
+                <button className="pm-button pm-button-primary" onClick={submitUpdate} disabled={!updateData.trim() || isGenerating}>
+                  {isGenerating ? (<><Loader size={18} className="spinner" />Updating...</>) : ('Regenerate PRD')}
                 </button>
               </div>
             </div>
@@ -480,7 +393,6 @@ Please regenerate the full PRD incorporating this new information. Update all re
         )}
       </main>
 
-      {/* FOOTER */}
       <footer className="pm-footer">
         <p>PM Claude Workspace v1.0 — $35/month for unlimited PRD generations</p>
       </footer>
@@ -488,7 +400,6 @@ Please regenerate the full PRD incorporating this new information. Update all re
   );
 };
 
-// SYSTEM PROMPTS
 const COMPREHENSIVE_SYSTEM_PROMPT = `You are a senior product manager at a tier-1 tech company (Amazon, Google, Airbnb level). Your job is to generate a detailed PRD that makes decisions visible and flags unknowns.
 
 Before generating the full PRD, first tell the user:
@@ -521,9 +432,7 @@ Requirements:
 
 const SHORT_SYSTEM_PROMPT = `You are a scrappy product manager who values speed and clarity. Generate a one-pager PRD that's immediately actionable.
 
-Before generating, tell the user if this should be the comprehensive template instead.
-
-Then generate a short PRD with these sections exactly as formatted:
+Generate a short PRD with these sections:
 
 PROBLEM
 [One or two sentences]
@@ -599,7 +508,6 @@ NEXT STEPS
 
 Requirements:
 - Ruthlessly cut anything that doesn't fit the one-pager
-- If it's longer than ~800 words, suggest comprehensive template
 - Open Questions should be answerable in a 30-min meeting
 - Be specific.`;
 
