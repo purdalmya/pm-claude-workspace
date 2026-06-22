@@ -13,6 +13,8 @@ const PMClaudeWorkspace = () => {
   const [copyFeedback, setCopyFeedback] = useState(false);
   const prdContentRef = useRef(null);
 
+  const API_KEY = 'sk-ant-api03-LxBSNGKN6htrUGqw';
+
   const comprehensiveFields = [
     { key: 'problem', label: 'PROBLEM BRIEF', placeholder: 'Describe the core problem the user is trying to solve', rows: 3 },
     { key: 'evidence', label: 'EVIDENCE (if you have it)', placeholder: 'Quantitative: What metrics show this is real?\nQualitative: User quotes or research findings', rows: 3 },
@@ -104,32 +106,32 @@ ${formData.constraints}
     }
 
     const systemPrompt = prdType === 'comprehensive'
-      ? COMPREHENSIVE_SYSTEM_PROMPT
-      : SHORT_SYSTEM_PROMPT;
+      ? `You are a senior product manager at a tier-1 tech company. Generate a detailed PRD that makes decisions visible and flags unknowns. Include sections: Problem Statement, Problem Exploration, Value Proposition, Solution Overview, Success Metrics, Scope, Design & Technical Approach, Timeline, Go-to-Market, Dependencies, Open Questions, and Appendix.`
+      : `You are a scrappy product manager who values speed and clarity. Generate a one-pager PRD that's immediately actionable with sections: Problem, Value Proposition, Solution, Who, Success Metrics, Scope, Risks, and Open Questions.`;
 
     const userPrompt = `${systemPrompt}\n\nHere's the brief:\n${briefContent}`;
 
     try {
-      const response = await fetch('/api/generate-prd', {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-api-key': API_KEY,
         },
         body: JSON.stringify({
-          brief: userPrompt,
+          model: 'claude-sonnet-4-6',
+          max_tokens: 2000,
+          messages: [{ role: 'user', content: userPrompt }],
         }),
       });
 
       const data = await response.json();
       const prdText = data.content[0].text;
 
-      const hasValidation = prdText.includes('BEFORE YOU GENERATE') || prdText.includes('Missing:');
-
       setGeneratedPRD({
         content: prdText,
         type: prdType,
         timestamp: new Date().toLocaleString(),
-        hasValidation: hasValidation,
         originalBrief: formData,
       });
 
@@ -165,20 +167,19 @@ ${generatedPRD.content}
 UPDATED INFORMATION:
 ${updateData}
 
-Please regenerate the full PRD incorporating this new information. Update all relevant sections. Make sure the Open Questions section reflects what we've now learned.`;
-
-    const systemPrompt = prdType === 'comprehensive'
-      ? COMPREHENSIVE_SYSTEM_PROMPT
-      : SHORT_SYSTEM_PROMPT;
+Please regenerate the full PRD incorporating this new information.`;
 
     try {
-      const response = await fetch('/api/generate-prd', {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-api-key': API_KEY,
         },
         body: JSON.stringify({
-          brief: `${systemPrompt}\n\n${updatePrompt}`,
+          model: 'claude-sonnet-4-6',
+          max_tokens: 2000,
+          messages: [{ role: 'user', content: updatePrompt }],
         }),
       });
 
@@ -338,13 +339,6 @@ Please regenerate the full PRD incorporating this new information. Update all re
                 </div>
               </div>
 
-              {generatedPRD.hasValidation && (
-                <div className="prd-note">
-                  <AlertCircle size={18} />
-                  <p>Before finalizing, read the open questions section and fill in any gaps.</p>
-                </div>
-              )}
-
               <div className="prd-content" ref={prdContentRef}>
                 {generatedPRD.content.split('\n').map((line, idx) => {
                   if (line.includes('OPEN QUESTIONS') || line.includes('Open Questions')) {
@@ -399,116 +393,5 @@ Please regenerate the full PRD incorporating this new information. Update all re
     </div>
   );
 };
-
-const COMPREHENSIVE_SYSTEM_PROMPT = `You are a senior product manager at a tier-1 tech company (Amazon, Google, Airbnb level). Your job is to generate a detailed PRD that makes decisions visible and flags unknowns.
-
-Before generating the full PRD, first tell the user:
-1. What information they've given you that's strong
-2. What's missing that would make this PRD stronger
-3. What you're going to assume if they don't clarify
-
-Then generate a comprehensive PRD with these sections:
-1. PROBLEM STATEMENT (with quantitative + qualitative proof)
-2. PROBLEM EXPLORATION (who experiences it, job stories, competitive landscape)
-3. VALUE PROPOSITION (one sentence)
-4. SOLUTION OVERVIEW (what we're building, user flow, key features)
-5. SUCCESS METRICS (primary, secondary, failure signal)
-6. SCOPE (in scope, out of scope, phased approach)
-7. DESIGN & TECHNICAL APPROACH (design, technical flow, risks + mitigations)
-8. TIMELINE & MILESTONES (actual dates)
-9. GO-TO-MARKET & ROLLOUT (user education, rollout strategy)
-10. DEPENDENCIES & STAKEHOLDERS (cross-functional work, critical path)
-11. OPEN QUESTIONS (organized by: Problem Clarification, Solution Clarification, Business Clarification, Technical Clarification)
-12. APPENDIX (research links, design files)
-
-Requirements:
-- Use plain language. Explain jargon.
-- Don't make up data. If you're guessing, say so in Open Questions.
-- Make design decisions visible (show tradeoffs).
-- Keep sections tight. No section longer than 1-2 paragraphs unless it needs detail.
-- Use job stories format (When X, I want Y, so I can Z)
-- In Open Questions, be specific. "Is this right?" is too vague.
-- In Success Metrics, specify baseline + target + timeline.`;
-
-const SHORT_SYSTEM_PROMPT = `You are a scrappy product manager who values speed and clarity. Generate a one-pager PRD that's immediately actionable.
-
-Generate a short PRD with these sections:
-
-PROBLEM
-[One or two sentences]
-
-Why it matters: [One metric or user quote]
-
----
-
-VALUE PROPOSITION
-[One sentence]
-
----
-
-SOLUTION
-Here's what we're building: [Two or three sentences max]
-
-User flow:
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
-
----
-
-WHO
-[One paragraph about who we're solving for]
-
----
-
-SUCCESS METRICS
-Primary metric: [The one number that tells us this worked]
-- Current: [Baseline]
-- Target: [Goal]
-
-Will know it's failing if: [One metric that signals this doesn't work]
-
----
-
-SCOPE
-In: [What we're building]
-
-Out: [What we're explicitly not doing]
-
-Timeline: [High-level phases]
-
----
-
-RISKS
-- Risk 1 → Mitigation
-- Risk 2 → Mitigation
-
----
-
-OPEN QUESTIONS
-
-Do We Understand the Problem?
-- Q1: [Specific question]
-- Q2: [Specific question]
-
-Is This the Right Solution?
-- Q1: [Specific question]
-
-Can We Build It?
-- Q1: [Specific question]
-
-Does It Matter?
-- Q1: [Specific question]
-
----
-
-NEXT STEPS
-1. [Blocker 1] by [date]
-2. [Blocker 2] by [date]
-
-Requirements:
-- Ruthlessly cut anything that doesn't fit the one-pager
-- Open Questions should be answerable in a 30-min meeting
-- Be specific.`;
 
 export default PMClaudeWorkspace;
