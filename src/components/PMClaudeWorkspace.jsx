@@ -9,7 +9,6 @@ const PMClaudeWorkspace = () => {
   const [generatedPRD, setGeneratedPRD] = useState(null);
   const [validationMessage, setValidationMessage] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [updateMode, setUpdateMode] = useState(false);
   const [updateData, setUpdateData] = useState('');
   const [copyFeedback, setCopyFeedback] = useState(false);
   const prdContentRef = useRef(null);
