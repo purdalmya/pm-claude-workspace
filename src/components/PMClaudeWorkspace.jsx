@@ -11,27 +11,29 @@ const PMClaudeWorkspace = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [updateData, setUpdateData] = useState('');
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [generatingMessage, setGeneratingMessage] = useState('Thinking like a senior PM...');
+  const [formFading, setFormFading] = useState(false);
   const prdContentRef = useRef(null);
 
   const API_KEY = 'sk-ant-api03-LxBSNGKN6htrUGqw';
 
   const comprehensiveFields = [
-    { key: 'problem', label: 'PROBLEM BRIEF', placeholder: 'Describe the core problem the user is trying to solve', rows: 3 },
-    { key: 'evidence', label: 'EVIDENCE (if you have it)', placeholder: 'Quantitative: What metrics show this is real?\nQualitative: User quotes or research findings', rows: 3 },
-    { key: 'targetUser', label: 'TARGET USER', placeholder: 'Who experiences this problem? What\'s their role/context?', rows: 2 },
-    { key: 'solutionIdea', label: 'INITIAL SOLUTION IDEA (optional)', placeholder: 'What are you thinking of building? Or leave blank for suggestions.', rows: 2 },
-    { key: 'constraints', label: 'CONSTRAINTS', placeholder: 'Timeline, team size, platform limitations, budget, dependencies', rows: 2 },
-    { key: 'competitors', label: 'COMPETITORS', placeholder: 'Who else is solving this? How? What are they missing?', rows: 2 },
-    { key: 'strategic', label: 'STRATEGIC CONTEXT', placeholder: 'Why does your company care about this? How does it fit your roadmap?', rows: 2 },
+    { key: 'problem', label: 'Problem Brief', placeholder: 'Describe the core problem the user is trying to solve', rows: 3 },
+    { key: 'evidence', label: 'Evidence (if you have it)', placeholder: 'Quantitative: What metrics show this is real?\nQualitative: User quotes or research findings', rows: 3 },
+    { key: 'targetUser', label: 'Target User', placeholder: 'Who experiences this problem? What\'s their role/context?', rows: 2 },
+    { key: 'solutionIdea', label: 'Initial Solution Idea (optional)', placeholder: 'What are you thinking of building? Or leave blank for suggestions.', rows: 2 },
+    { key: 'constraints', label: 'Constraints', placeholder: 'Timeline, team size, platform limitations, budget, dependencies', rows: 2 },
+    { key: 'competitors', label: 'Competitors', placeholder: 'Who else is solving this? How? What are they missing?', rows: 2 },
+    { key: 'strategic', label: 'Strategic Context', placeholder: 'Why does your company care about this? How does it fit your roadmap?', rows: 2 },
   ];
 
   const shortFields = [
-    { key: 'problem', label: 'PROBLEM', placeholder: 'One or two sentences. What\'s the actual pain point?', rows: 2 },
-    { key: 'who', label: 'WHO', placeholder: 'One user type. Who experiences this problem?', rows: 1 },
-    { key: 'evidence', label: 'EVIDENCE', placeholder: 'One number or one user quote. That\'s it.', rows: 1 },
-    { key: 'idea', label: 'IDEA', placeholder: 'What are you thinking of building?', rows: 2 },
-    { key: 'timeline', label: 'TIMELINE', placeholder: 'When does this need to ship?', rows: 1 },
-    { key: 'constraints', label: 'CONSTRAINTS', placeholder: 'What can\'t change? (Team size, budget, platforms, dependencies)', rows: 2 },
+    { key: 'problem', label: 'Problem', placeholder: 'One or two sentences. What\'s the actual pain point?', rows: 2 },
+    { key: 'who', label: 'Who', placeholder: 'One user type. Who experiences this problem?', rows: 1 },
+    { key: 'evidence', label: 'Evidence', placeholder: 'One number or one user quote. That\'s it.', rows: 1 },
+    { key: 'idea', label: 'Idea', placeholder: 'What are you thinking of building?', rows: 2 },
+    { key: 'timeline', label: 'Timeline', placeholder: 'When does this need to ship?', rows: 1 },
+    { key: 'constraints', label: 'Constraints', placeholder: 'What can\'t change? (Team size, budget, platforms, dependencies)', rows: 2 },
   ];
 
   const fields = prdType === 'comprehensive' ? comprehensiveFields : shortFields;
@@ -56,8 +58,23 @@ const PMClaudeWorkspace = () => {
   const generatePRD = async () => {
     if (!validateInput()) return;
 
+    setFormFading(true);
     setIsGenerating(true);
     setScreen('generating');
+
+    const messages = [
+      { msg: 'Thinking like a senior PM...', delay: 0 },
+      { msg: 'Structuring your brief...', delay: 2000 },
+      { msg: 'Adding open questions...', delay: 4000 },
+    ];
+
+    let messageIndex = 0;
+    const messageInterval = setInterval(() => {
+      if (messageIndex < messages.length) {
+        setGeneratingMessage(messages[messageIndex].msg);
+        messageIndex++;
+      }
+    }, 2000);
 
     let briefContent;
     if (prdType === 'comprehensive') {
@@ -112,7 +129,8 @@ ${formData.constraints}
     const userPrompt = `${systemPrompt}\n\nHere's the brief:\n${briefContent}`;
 
     try {
-      const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {        method: 'POST',
+      const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': API_KEY,
@@ -123,6 +141,8 @@ ${formData.constraints}
           messages: [{ role: 'user', content: userPrompt }],
         }),
       });
+
+      clearInterval(messageInterval);
 
       const data = await response.json();
       const prdText = data.content[0].text;
@@ -135,9 +155,12 @@ ${formData.constraints}
       });
 
       setScreen('viewing');
+      setFormFading(false);
     } catch (error) {
-      setValidationMessage(`Error generating PRD: ${error.message}`);
+      clearInterval(messageInterval);
+      setValidationMessage(`Couldn't generate your PRD. ${error.message}`);
       setScreen('form');
+      setFormFading(false);
     } finally {
       setIsGenerating(false);
     }
@@ -157,6 +180,7 @@ ${formData.constraints}
 
   const submitUpdate = async () => {
     setIsGenerating(true);
+    setGeneratingMessage('Updating your PRD...');
 
     const updatePrompt = `I have a ${prdType} PRD that needs updating.
 
@@ -169,7 +193,8 @@ ${updateData}
 Please regenerate the full PRD incorporating this new information.`;
 
     try {
-      const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {        method: 'POST',
+      const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': API_KEY,
@@ -193,7 +218,7 @@ Please regenerate the full PRD incorporating this new information.`;
       setUpdateData('');
       setScreen('viewing');
     } catch (error) {
-      setValidationMessage(`Error updating PRD: ${error.message}`);
+      setValidationMessage(`Couldn't update your PRD. ${error.message}`);
     } finally {
       setIsGenerating(false);
     }
@@ -216,6 +241,7 @@ Please regenerate the full PRD incorporating this new information.`;
     setGeneratedPRD(null);
     setValidationMessage(null);
     setUpdateData('');
+    setFormFading(false);
   };
 
   return (
@@ -275,9 +301,9 @@ Please regenerate the full PRD incorporating this new information.`;
         )}
 
         {screen === 'form' && (
-          <div className="pm-screen form-screen">
+          <div className="pm-screen form-screen" style={{ opacity: formFading ? 0.6 : 1, transition: 'opacity 0.3s ease' }}>
             <div className="form-container">
-              <h2>Let's build your {prdType === 'comprehensive' ? 'comprehensive PRD' : 'one-pager'}</h2>
+              <h2>Let's build your {prdType === 'comprehensive' ? 'PRD' : 'one-pager'}</h2>
               <p className="form-subtitle">The better your input, the better your PRD. Be specific. If you don't have an answer, say so.</p>
 
               {validationMessage && (
@@ -307,8 +333,8 @@ Please regenerate the full PRD incorporating this new information.`;
           <div className="pm-screen generating-screen">
             <div className="generating-content">
               <div className="generating-spinner"><div className="spinner-dot"></div></div>
-              <h2>Generating your PRD...</h2>
-              <p>This usually takes 10-15 seconds. We're thinking like a senior PM.</p>
+              <h2>{generatingMessage}</h2>
+              <p>This usually takes 10-15 seconds.</p>
             </div>
           </div>
         )}
@@ -368,7 +394,7 @@ Please regenerate the full PRD incorporating this new information.`;
           <div className="pm-screen updating-screen">
             <div className="update-container">
               <h2>What changed?</h2>
-              <p className="update-subtitle">Tell us what new information you've gathered or decisions you've made. We'll regenerate the PRD.</p>
+              <p className="update-subtitle">Tell us what new information you've gathered or decisions you've made.</p>
 
               <textarea className="form-input update-input" placeholder="Example: We validated that 60% of users hit this daily (not just weekly). Also confirmed iOS launch needs to wait until Q2. Updated: timeline now reflects phased rollout..." rows={8} value={updateData} onChange={(e) => setUpdateData(e.target.value)} />
 
