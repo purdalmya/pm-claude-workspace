@@ -111,7 +111,7 @@ ${formData.constraints}
     const userPrompt = `${systemPrompt}\n\nHere's the brief:\n${briefContent}`;
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/generate-prd', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ Please regenerate the full PRD incorporating this new information. Update all re
       : SHORT_SYSTEM_PROMPT;
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/generate-prd', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
