@@ -13,8 +13,7 @@ export default async function handler(req, res) {
   
     try {
       const { brief } = req.body;
-      const apiKey = process.env.ANTHROPIC_API_KEY;
-  
+      const apiKey = 'sk-ant-api03-LxBSNGKN6htrUGqw';  
       if (!apiKey || !brief) {
         return res.status(400).json({ error: 'Missing API key or brief' });
       }
