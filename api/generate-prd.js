@@ -20,6 +20,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'API key not configured' });
     }
   
+    if (!brief) {
+      return res.status(400).json({ error: 'Brief is required' });
+    }
+  
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -34,9 +38,15 @@ export default async function handler(req, res) {
         }),
       });
   
+      if (!response.ok) {
+        const errorData = await response.json();
+        return res.status(response.status).json({ error: errorData });
+      }
+  
       const data = await response.json();
       return res.status(200).json(data);
     } catch (error) {
+      console.error('Backend error:', error);
       return res.status(500).json({ error: error.message });
     }
   }
