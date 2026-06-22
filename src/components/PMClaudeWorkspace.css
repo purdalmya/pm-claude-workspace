@@ -1,17 +1,17 @@
-/* PM CLAUDE WORKSPACE - OPINIONATED CLARITY DESIGN SYSTEM */
+/* PM CLAUDE WORKSPACE - OPINIONATED CLARITY (DARK MODE) */
 /* Typography: Outfit (headlines) + Inter (body) + Georgia (accent) */
-/* Color: Disciplined orange usage + intentional grays */
+/* Dark mode with warm tones, intentional orange usage */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --color-bg-light: #f5f5f5;
-  --color-bg-card: #ffffff;
-  --color-bg-secondary: #fafafa;
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #666666;
-  --color-text-tertiary: #999999;
-  --color-border: #e8e8e8;
+  --color-bg-primary: #0f0f0f;
+  --color-bg-secondary: #1a1a1a;
+  --color-bg-tertiary: #2a2a2a;
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #b8b8b8;
+  --color-text-tertiary: #808080;
+  --color-border: #2a2a2a;
   --color-accent: #ff6b35;
   --color-accent-dark: #e55a25;
   --color-success: #22c55e;
@@ -41,7 +41,7 @@
 }
 
 html, body {
-  background: var(--color-bg-light);
+  background: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-family: var(--font-body);
   line-height: 1.6;
@@ -55,17 +55,17 @@ html, body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--color-bg-light);
+  background: var(--color-bg-primary);
 }
 
 .pm-header {
-  background: var(--color-bg-card);
+  background: var(--color-bg-secondary);
   border-bottom: 1px solid var(--color-border);
   padding: var(--spacing-lg) var(--spacing-xl);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .pm-header-content h1 {
@@ -99,7 +99,7 @@ html, body {
 .pm-reset-btn:hover {
   border-color: var(--color-accent);
   color: var(--color-accent);
-  background: rgba(255, 107, 53, 0.04);
+  background: rgba(255, 107, 53, 0.1);
 }
 
 .pm-main {
@@ -112,13 +112,13 @@ html, body {
 }
 
 .pm-footer {
-  background: var(--color-bg-card);
+  background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
   padding: var(--spacing-lg) var(--spacing-xl);
   text-align: center;
   color: var(--color-text-tertiary);
   font-size: 12px;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* SCREENS */
@@ -160,7 +160,7 @@ html, body {
 }
 
 .type-card {
-  background: var(--color-bg-card);
+  background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   padding: var(--spacing-xl);
   cursor: pointer;
@@ -168,15 +168,16 @@ html, body {
   text-align: left;
   font-family: var(--font-body);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   position: relative;
   overflow: hidden;
 }
 
 .type-card:hover {
   border-color: var(--color-accent);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 32px rgba(255, 107, 53, 0.15);
   transform: translateY(-2px);
+  background: var(--color-bg-tertiary);
 }
 
 .type-card-header {
@@ -280,7 +281,7 @@ html, body {
 
 .form-input,
 .update-input {
-  background: var(--color-bg-card);
+  background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
   padding: var(--spacing-md);
@@ -296,7 +297,8 @@ html, body {
 .update-input:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+  background: var(--color-bg-tertiary);
 }
 
 .form-input::placeholder,
@@ -326,13 +328,13 @@ html, body {
 .pm-button-primary {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: #ffffff;
+  color: #000000;
 }
 
 .pm-button-primary:hover:not(:disabled) {
   background: var(--color-accent-dark);
   border-color: var(--color-accent-dark);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
+  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.3);
 }
 
 .pm-button-secondary {
@@ -341,8 +343,8 @@ html, body {
 }
 
 .pm-button-secondary:hover:not(:disabled) {
-  border-color: var(--color-text-secondary);
-  background: var(--color-bg-secondary);
+  border-color: var(--color-accent);
+  background: rgba(255, 107, 53, 0.08);
 }
 
 .pm-button:disabled {
@@ -352,9 +354,9 @@ html, body {
 
 /* VALIDATION MESSAGE */
 .pm-validation-message {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
   padding: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
   display: flex;
@@ -375,10 +377,11 @@ html, body {
 
 .generating-content {
   text-align: center;
-  background: var(--color-bg-card);
+  background: var(--color-bg-secondary);
   padding: var(--spacing-2xl);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .generating-spinner {
@@ -426,10 +429,10 @@ html, body {
 }
 
 .prd-container {
-  background: var(--color-bg-card);
+  background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   animation: slideUp 0.4s ease-out;
 }
@@ -451,7 +454,7 @@ html, body {
   align-items: center;
   padding: var(--spacing-lg) var(--spacing-xl);
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-tertiary);
 }
 
 .prd-meta {
@@ -462,7 +465,7 @@ html, body {
 
 .prd-type {
   font-size: 11px;
-  background: rgba(255, 107, 53, 0.1);
+  background: rgba(255, 107, 53, 0.15);
   color: var(--color-accent);
   padding: 4px 8px;
   border-radius: var(--radius-sm);
@@ -502,20 +505,20 @@ html, body {
 .pm-action-btn:hover {
   border-color: var(--color-accent);
   color: var(--color-accent);
-  background: rgba(255, 107, 53, 0.04);
+  background: rgba(255, 107, 53, 0.1);
 }
 
 .pm-update-btn:hover {
   border-color: var(--color-success);
   color: var(--color-success);
-  background: rgba(34, 197, 94, 0.04);
+  background: rgba(34, 197, 94, 0.1);
 }
 
 /* PRD NOTE */
 .prd-note {
-  background: rgba(234, 179, 8, 0.08);
+  background: rgba(234, 179, 8, 0.12);
   border-left: 3px solid var(--color-warning);
-  color: #92400e;
+  color: #fde047;
   padding: var(--spacing-md) var(--spacing-lg);
   margin: 0;
   display: flex;
