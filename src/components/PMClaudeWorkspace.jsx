@@ -129,8 +129,7 @@ ${formData.constraints}
     const userPrompt = `${systemPrompt}\n\nHere's the brief:\n${briefContent}`;
 
     try {
-      const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {
-        method: 'POST',
+      const response = await fetch('/api/generate', {        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': API_KEY,
@@ -193,8 +192,7 @@ ${updateData}
 Please regenerate the full PRD incorporating this new information.`;
 
     try {
-      const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {
-        method: 'POST',
+      const response = await fetch('/api/generate', {        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': API_KEY,
