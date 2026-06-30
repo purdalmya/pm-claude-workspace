@@ -10,24 +10,25 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
   
-    const { brief } = req.body;
-    const API_KEY = 'sk-ant-api03-LxBSNGKN6htrUGqw'; // Hardcoded for testing
-  
-    if (!brief) {
-      return res.status(400).json({ error: 'Brief is required' });
+    const { model, max_tokens, messages } = req.body;
+    const API_KEY = process.env.ANTHROPIC_API_KEY;
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'messages is required' });
     }
-  
+
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': API_KEY,
+          'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 2000,
-          messages: [{ role: 'user', content: brief }],
+          model: model || 'claude-sonnet-4-6',
+          max_tokens: max_tokens || 2000,
+          messages,
         }),
       });
   
