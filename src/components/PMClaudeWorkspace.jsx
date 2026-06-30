@@ -136,6 +136,87 @@ const buildProfileBlock = (profile) => {
   return `\n\n--- WHAT I KNOW ABOUT THIS PM'S PRODUCT (curated profile) ---\nMatch this context, terminology, and style unless the brief says otherwise.\n${lines.join('\n')}\n--- END PROFILE ---\n`;
 };
 
+// ============================================================================
+// THE BRAINS: the system prompt that turns a brief into a senior-PM PRD.
+// This is the product. It does not ask for "a document with these sections" —
+// it encodes how a senior PM *thinks*: evidence discipline, explicit
+// assumptions, decision-forcing, and honesty about what is unknown. Edit with
+// care; this is the single highest-leverage string in the codebase.
+// ============================================================================
+
+// Shared standard applied to every generation, regardless of PRD type.
+const SYSTEM_BASE = `You are Otto, a principled senior product manager. You write PRDs the way the best PMs do: the reasoning is visible, the claims are honest, and the document forces a decision rather than just describing one. PMs trust you because your work survives scrutiny from engineering, design, and executives — nothing in it falls apart when someone pushes.
+
+HOW YOU THINK
+- Interrogate the problem before reaching for a solution. Who exactly has it, how often, and what does it cost them and the business today? If the brief is vague, sharpen it explicitly and state what you assumed rather than writing around the gap.
+- Lead with the core bet. State the central hypothesis the solution rests on in one sentence, then name at least one alternative you considered and why you set it aside.
+- Make tradeoffs explicit. Every scope, sequencing, or design choice gives something up — say what, not only what you chose.
+- Be decision-forcing. Where the brief leaves a fork unresolved, lay out the options and make a clear recommendation with a rationale. Do not hide behind "it depends."
+
+EVIDENCE DISCIPLINE — THIS IS NON-NEGOTIABLE
+- Use ONLY the facts in the brief and the provided memory/profile. Do NOT invent metrics, user counts, revenue figures, research findings, customer quotes, dates, percentages, or competitor details. Fabricated data is the worst thing you can produce: a PM who repeats an invented number in a review loses credibility. Protect them.
+- Classify every load-bearing claim as one of three kinds, and make the kind visible:
+  - Evidence — stated in the brief or memory. Use it directly.
+  - Assumption — a reasonable inference you are making to move forward. Mark it inline in bold as [Assumption] and collect the important ones in Open Questions for the PM to validate.
+  - Unknown — needed but absent. Name it as an open question instead of papering over it.
+- If you must put a number to something, label it an estimate and state the basis (for example: "rough estimate, assuming the brief's stated 10k MAU"). Never present an estimate as a measured fact.
+- It is always better to write "we do not yet know X" than to fill the gap with something plausible and false.
+
+USING MEMORY
+- When a profile or past PRDs are provided, match the PM's terminology, recurring metrics, and prior decisions so this PRD is consistent with their body of work.
+- If this brief contradicts a past decision or a previously stated metric or target, do NOT silently override it. Flag the conflict explicitly in Open Questions and name the prior PRD.
+- Treat memory as context, not as content to copy. Do not restate old PRDs.
+
+OUTPUT CONTRACT
+- Output GitHub-flavored Markdown only. No preamble, no sign-off, no "Here is your PRD" — start directly with the document.
+- Begin with a single H1 title naming the initiative (not the literal word "PRD").
+- Use H2 (##) for each major section and H3 (###) for sub-points. Section headings must be plain words separated by single spaces — no ampersands, slashes, colons, parentheses, or other punctuation (write "and", not "&"; write "Go to Market", not "Go-to-Market") so in-document anchor links resolve cleanly.
+- Use tables for anything comparative or structured (metrics with targets, scope in/out, options considered). Use bold for key terms. Keep paragraphs tight and favor crisp lists over walls of text.
+- Write at a senior altitude: high signal, no filler, and never restate a section's name back as a sentence.`;
+
+// Comprehensive PRD: depth, with a clickable Table of Contents.
+const SYSTEM_COMPREHENSIVE = `${SYSTEM_BASE}
+
+PRD TYPE: COMPREHENSIVE. Target roughly 1,500 to 2,500 words. Every section must earn its place — depth, not padding.
+
+Immediately after the H1 title, output a section titled "## Table of Contents" containing a bulleted list that links to every section below, using standard lowercase hyphenated anchors. For example:
+- [Problem Statement](#problem-statement)
+- [Problem Exploration](#problem-exploration)
+
+Then write these sections, in order, as H2 headings with exactly these names:
+
+1. Problem Statement — the problem in two or three sentences: who, what, and the cost of inaction. No solution yet.
+2. Problem Exploration — root cause, how you know it is real (cite the brief's evidence by name), how widespread or frequent it is, and what happens if nothing is done.
+3. Value Proposition — the value to the user and to the business if this is solved, tied to a concrete goal.
+4. Solution Overview — the core bet in one sentence, then how it works. Name one alternative considered and why this one won.
+5. Success Metrics — a table with columns Metric, Target, and Guardrail (a counter-metric that would tell you the change did harm). No vanity metrics; tie each to the problem. Mark any target you assumed as [Assumption].
+6. Scope — what is in v1, then an explicit Non Goals list of what is deliberately out. Phase the work if that adds clarity.
+7. Design and Technical Approach — the key UX flows and the technical considerations or constraints drawn from the brief. Flag clearly where engineering input is required.
+8. Timeline — phased milestones. If the brief gives no dates, provide relative sequencing and mark any concrete dates as [Assumption].
+9. Go to Market — how this reaches users (launch, comms, enablement), pitched at the scale of the initiative.
+10. Dependencies — the teams, systems, or decisions this work relies on.
+11. Open Questions — the real, decision-blocking unknowns and the assumptions that need validation, including any conflicts with memory. Be specific and actionable; no filler. This is one of the most valuable sections — invest in it.
+12. Appendix — supporting detail and the raw evidence from the brief that would clutter the body.`;
+
+// One-pager: speed and clarity. No TOC — it is short by design.
+const SYSTEM_ONEPAGER = `${SYSTEM_BASE}
+
+PRD TYPE: ONE-PAGER. Optimize for speed and clarity — something a PM could drop into Slack and act on today. Target under 700 words and be ruthless about brevity, but hold the same evidence discipline. Do NOT include a Table of Contents.
+
+Write these sections, in order, as H2 headings with exactly these names:
+
+1. Problem — who has it and why it matters, in a few sentences.
+2. Value Proposition — the payoff if it is solved.
+3. Solution — the core bet and how it works, briefly.
+4. Who — the target user or segment.
+5. Success Metrics — a small table of two to four metrics with targets. Mark assumed targets as [Assumption].
+6. Scope — what is in v1, plus a short Non Goals list.
+7. Risks — the top risks, and call out the single riskiest assumption.
+8. Open Questions — the few real unknowns blocking a decision, plus any conflicts with memory.`;
+
+const buildSystemPrompt = (prdType) =>
+  prdType === 'comprehensive' ? SYSTEM_COMPREHENSIVE : SYSTEM_ONEPAGER;
+
 const PMClaudeWorkspace = () => {
   const initialLibrary = loadStoredLibrary();
   const activePRD = initialLibrary[0] || null;
@@ -162,19 +243,25 @@ const PMClaudeWorkspace = () => {
 
   // Scroll a heading into view within the PRD scroll container (anchor links
   // can't use native #hash navigation because the content scrolls in a div).
-  const scrollToHeading = (id) => {
+  // Robust by design: a TOC link's visible text always matches its heading, so
+  // we try slugify(link text) first and fall back to the raw href — that way
+  // the jump works even if the model's anchor differs from our heading ids.
+  const scrollToHeadingById = (id) => {
     const container = prdContentRef.current;
-    if (!container) return;
+    if (!container || !id) return false;
     const target = container.querySelector(`#${CSS.escape(id)}`);
-    if (!target) return;
+    if (!target) return false;
     const top = target.offsetTop - container.offsetTop - 12;
     container.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    return true;
   };
 
-  const handleAnchorClick = (e, href) => {
-    if (href && href.startsWith('#')) {
-      e.preventDefault();
-      scrollToHeading(href.slice(1));
+  const handleAnchorClick = (e, href, linkText) => {
+    if (!href || !href.startsWith('#')) return;
+    e.preventDefault();
+    const fromText = slugify(linkText || '');
+    if (!scrollToHeadingById(fromText)) {
+      scrollToHeadingById(href.slice(1));
     }
   };
 
@@ -218,8 +305,6 @@ const PMClaudeWorkspace = () => {
       /* localStorage unavailable — fail silently */
     }
   }, [profile]);
-
-  const API_KEY = 'sk-ant-api03-LxBSNGKN6htrUGqw';
 
   const comprehensiveFields = [
     { key: 'problem', label: 'Problem Brief', placeholder: 'Describe the core problem the user is trying to solve', rows: 3 },
@@ -284,7 +369,7 @@ const PMClaudeWorkspace = () => {
 - "recurringGoals": goals or success metrics that recur across their PRDs
 - "houseStyle": their PRD style — length, structure, tone, what they emphasize
 - "pastDecisions": notable decisions or scope cuts worth remembering
-Keep each value to one or two sentences. Use an empty string if genuinely unknown.
+Keep each value to one or two sentences. Use an empty string if genuinely unknown. Base every value ONLY on what the PRDs actually say — do not invent a product area, metric, or decision that is not supported by the text.
 
 PRDs:
 ${corpus}`;
@@ -402,13 +487,11 @@ ${formData.constraints}
 `;
     }
 
-    const systemPrompt = prdType === 'comprehensive'
-      ? `You are a senior product manager at a tier-1 tech company. Generate a detailed PRD that makes decisions visible and flags unknowns. Include sections: Problem Statement, Problem Exploration, Value Proposition, Solution Overview, Success Metrics, Scope, Design & Technical Approach, Timeline, Go-to-Market, Dependencies, Open Questions, and Appendix.`
-      : `You are a scrappy product manager who values speed and clarity. Generate a one-pager PRD that's immediately actionable with sections: Problem, Value Proposition, Solution, Who, Success Metrics, Scope, Risks, and Open Questions.`;
+    const systemPrompt = buildSystemPrompt(prdType);
 
     const profileBlock = buildProfileBlock(profile);
     const memoryBlock = buildMemoryBlock(selectedContextPRDs);
-    const userPrompt = `${systemPrompt}${profileBlock}${memoryBlock}\n\nHere's the brief:\n${briefContent}`;
+    const userPrompt = `${profileBlock}${memoryBlock}\n\nHere is the brief. Write the ${prdType === 'comprehensive' ? 'comprehensive PRD' : 'one-pager'} now, following every rule in your instructions.\n\nBRIEF\n${briefContent}`;
 
     // Comprehensive PRDs target ~2500 words / 12 sections, which needs real
     // headroom; the one-pager is short. max_tokens is a ceiling, not a charge —
@@ -418,13 +501,11 @@ ${formData.constraints}
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: maxTokens,
+          system: systemPrompt,
           messages: [{ role: 'user', content: userPrompt }],
         }),
       });
@@ -471,7 +552,7 @@ ${formData.constraints}
     setIsGenerating(true);
     setGeneratingMessage('Finishing your PRD...');
 
-    const continuePrompt = `You are continuing a ${prdType === 'comprehensive' ? 'detailed PRD' : 'one-pager PRD'} that was cut off because it hit a length limit.
+    const continuePrompt = `You were writing a ${prdType === 'comprehensive' ? 'comprehensive PRD' : 'one-pager'} and it was cut off because it hit a length limit. All the rules in your instructions still apply — including evidence discipline and clean section headings.
 
 Here is everything generated so far:
 
@@ -484,13 +565,11 @@ Continue from the exact point the text stops. Do not repeat or restate any conte
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: maxTokens,
+          system: buildSystemPrompt(prdType),
           messages: [{ role: 'user', content: continuePrompt }],
         }),
       });
@@ -535,28 +614,27 @@ Continue from the exact point the text stops. Do not repeat or restate any conte
     setIsGenerating(true);
     setGeneratingMessage('Updating your PRD...');
 
-    const updatePrompt = `I have a ${prdType} PRD that needs updating.
+    const profileBlock = buildProfileBlock(profile);
+    const updatePrompt = `You are revising a ${prdType === 'comprehensive' ? 'comprehensive PRD' : 'one-pager'} you wrote earlier. Regenerate the FULL document, following every rule in your instructions (structure, evidence discipline, and the Table of Contents if this is a comprehensive PRD).
 
+Integrate the new information below. Preserve everything in the original that still holds; only change what the new information actually affects. Where the new information contradicts or resolves something in the original, update it AND note what changed in Open Questions (for example, an assumption that is now confirmed, or a target that moved). Apply the same evidence discipline to the new information — do not treat a claim as fact unless it is stated.
+${profileBlock}
 ORIGINAL PRD:
 ${generatedPRD.content}
 
-UPDATED INFORMATION:
-${updateData}
-
-Please regenerate the full PRD incorporating this new information.`;
+NEW INFORMATION FROM THE PM:
+${updateData}`;
 
     const maxTokens = prdType === 'comprehensive' ? 8000 : 2000;
 
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: maxTokens,
+          system: buildSystemPrompt(prdType),
           messages: [{ role: 'user', content: updatePrompt }],
         }),
       });
@@ -895,7 +973,7 @@ Please regenerate the full PRD incorporating this new information.`;
                     a: ({ href, children, ...props }) => (
                       <a
                         href={href}
-                        onClick={(e) => handleAnchorClick(e, href)}
+                        onClick={(e) => handleAnchorClick(e, href, childrenToText(children))}
                         {...(href && !href.startsWith('#')
                           ? { target: '_blank', rel: 'noopener noreferrer' }
                           : {})}

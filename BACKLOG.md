@@ -17,7 +17,7 @@ The **individual PM** who wants to bypass corporate red tape on AI tooling and j
 
 | # | Item | Why now | Notes |
 |---|------|---------|-------|
-| 1 | **Replace / secure API keys before launch** | Security + functional blocker. Hardcoded key in frontend (`API_KEY` in `PMClaudeWorkspace.jsx`) is exposed to every visitor; the current key is also invalid (401). | Remove ALL client-side keys + the dead `x-api-key` header; set a valid `ANTHROPIC_API_KEY` server-side in Vercel; rotate the leaked key. |
+| 1 | **Replace / secure API keys before launch** | Security + functional blocker. | ✅ Removed the hardcoded client-side `API_KEY` and the dead `x-api-key` header (frontend now calls `/api/generate` cleanly). ⬜ Remaining: set a valid `ANTHROPIC_API_KEY` server-side in Vercel, and rotate the previously-leaked key. |
 | 2 | **Rewrite copy for the new ICP** | Aligns the whole product to "individual PM bypassing red tape" before anyone sees it. Cheap, high-leverage. | Hero, taglines, footer ($35/mo line), empty states, button labels. Voice = "just do your work," speed, no corporate friction. |
 | 3 | **Memory MVP — design** | The flagship differentiator; design can start in parallel with #1/#2. | See "Memory UX" exploration. Decide capture model, recall UX, and the "what I remember" profile. |
 | 4 | **Verify "Otto" is ownable before committing** | Name is decided but unvalidated — "Otto" is a crowded brand stem and `otto.com` is gone. Cheap to check, expensive to get wrong after you print/market. | 30-min check: trademark search in software/SaaS class, domain availability (favorite: `otto.pm`; fallbacks getotto/useotto/askotto), App Store + search scan. If exact word is too crowded, fix with a modifier, not a new name. |
@@ -26,7 +26,7 @@ The **individual PM** who wants to bypass corporate red tape on AI tooling and j
 
 | # | Item | Why | Notes |
 |---|------|-----|-------|
-| 5 | **Memory MVP — build** | This is the moat against the $0 substitute (ChatGPT + a pasted prompt). Without it you're a disposable prompt wrapper. | Built as vertical slices: ✅ #1 multi-PRD storage (localStorage array), ✅ #2 context chips → injected generation, ✅ #3 "What I remember" profile (Claude-synthesized, editable, injected). ⬜ #4 history/search drawer (low priority). |
+| 5 | **Memory MVP — build** ✅ | This is the moat against the $0 substitute (ChatGPT + a pasted prompt). Without it you're a disposable prompt wrapper. | All 4 slices built: ✅ #1 multi-PRD storage (localStorage array), ✅ #2 context chips → relevance-ranked injection (whole library, cap 8), ✅ #3 "What I remember" profile (whole-library synthesis, editable, injected), ✅ #4 history/search drawer (search + open + forget). Phase-2 upgrades (embeddings, accounts) tracked in LATER + Inbox. |
 | 6 | **Validate riskiest assumption** | Memory increases shadow-IT data exposure — the exact thing red tape exists to police. Could be moat or kill-switch. | 5 target PMs: "Would you paste confidential PRD context into an unapproved tool — and does it getting smarter make you more or less comfortable?" |
 
 ## LATER (depends on validation / scale)
@@ -42,7 +42,7 @@ The **individual PM** who wants to bypass corporate red tape on AI tooling and j
 ## Engineering cleanups (small, opportunistic)
 
 - [ ] Copy-to-clipboard uses rendered `innerText` (tab-separated tables) — switch to raw markdown for fidelity. (`PMClaudeWorkspace.jsx`)
-- [ ] Remove the now-useless `x-api-key` header the frontend sends to `/api/generate` (folds into #1).
+- [x] Remove the now-useless `x-api-key` header the frontend sends to `/api/generate` (done with the prompt rewrite).
 
 ## Parked / someday
 
@@ -57,3 +57,6 @@ The **individual PM** who wants to bypass corporate red tape on AI tooling and j
 
 ## Inbox (unsorted — drop new ideas here)
 - **Memory empty / cold-start state** — the first PRD has nothing to remember. Design the first-run experience so memory feels valuable on PRD #1, not just #11 (e.g. "I'll start remembering from here," seed from a quick profile setup). Matters a lot for ICP first impression.
+- **Semantic relevance (embeddings)** — context-chip matching is keyword-only, so "checkout" won't match "payment flow." Upgrade to embeddings for the recall step. Phase-2; pairs with accounts/server storage (#8).
+- **Truncated context excerpts** — past PRDs are sliced (~1,200 chars for chips; budget-scaled for the profile) to bound token cost, so a detail buried deep in a long PRD can be missed. Revisit chunking/summarization if users hit it.
+- **Inline contradiction callout (UI)** — today contradictions are flagged inside the generated PRD via the prompt. The mockup's inline warning chip (surfaced in the UI during/after generation) is a later polish on slice #2.

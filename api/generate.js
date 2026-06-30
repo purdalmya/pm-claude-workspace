@@ -10,7 +10,7 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
   
-    const { model, max_tokens, messages } = req.body;
+    const { model, max_tokens, messages, system } = req.body;
     const API_KEY = process.env.ANTHROPIC_API_KEY;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -28,6 +28,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           model: model || 'claude-sonnet-4-6',
           max_tokens: max_tokens || 2000,
+          ...(system ? { system } : {}),
           messages,
         }),
       });
