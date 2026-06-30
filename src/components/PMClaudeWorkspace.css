@@ -259,17 +259,26 @@ html, body {
   line-height: 1.6;
 }
 
-/* MEMORY CONTEXT STRIP */
-.memory-context {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+/* MEMORY PANEL — distinct from inputs: tinted, with an accent edge, so it
+   reads as Otto's smart-suggestion surface, not another field to type into. */
+.memory-panel {
+  background: rgba(255, 107, 53, 0.06);
+  border: 1px solid rgba(255, 107, 53, 0.22);
+  border-left: 3px solid var(--color-accent);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
+  margin: calc(var(--spacing-sm) * -1) 0 var(--spacing-lg);
 }
 
-.memory-context-header {
+.memory-panel-header {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.memory-panel-title {
+  display: inline-flex;
   align-items: center;
   gap: var(--spacing-sm);
   font-family: var(--font-display);
@@ -278,13 +287,23 @@ html, body {
   color: var(--color-text-primary);
 }
 
-.memory-context-header svg {
+.memory-panel-title svg {
   color: var(--color-accent);
 }
 
-.memory-context-sub {
+.memory-panel-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-accent);
+  background: rgba(255, 107, 53, 0.14);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.memory-panel-sub {
   font-size: 12px;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   margin: var(--spacing-xs) 0 var(--spacing-md);
   line-height: 1.5;
 }
@@ -295,41 +314,67 @@ html, body {
   gap: var(--spacing-sm);
 }
 
+/* "Off" chip looks like a solid, tappable button (NOT placeholder text). */
 .memory-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   max-width: 100%;
-  padding: 6px 12px;
+  padding: 7px 13px;
   font-family: var(--font-body);
   font-size: 13px;
+  font-weight: 500;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-text-tertiary);
+  border-radius: 999px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
+  animation: chipIn 0.2s ease-out;
+}
+
+@keyframes chipIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.memory-chip svg {
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
 .memory-chip:hover {
   border-color: var(--color-accent);
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
+  transform: translateY(-1px);
 }
 
 .memory-chip-on {
-  background: rgba(255, 107, 53, 0.12);
+  background: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-accent);
+  color: #0f0f0f;
+  font-weight: 600;
+}
+
+.memory-chip-on svg {
+  opacity: 1;
+}
+
+.memory-chip-on:hover {
+  color: #0f0f0f;
+  filter: brightness(1.08);
 }
 
 .memory-chip-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.memory-chip svg {
-  flex-shrink: 0;
 }
 
 /* MEMORY PROFILE ("What I remember") */

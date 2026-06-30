@@ -847,37 +847,6 @@ ${updateData}`;
               <h2>Let's build your {prdType === 'comprehensive' ? 'PRD' : 'one-pager'}</h2>
               <p className="form-subtitle">The better your input, the better your PRD. Be specific. If you don't have an answer, say so.</p>
 
-              {library.length > 0 && (
-                <div className="memory-context">
-                  <div className="memory-context-header">
-                    <Brain size={16} />
-                    <span>Context from your past PRDs</span>
-                  </div>
-                  <p className="memory-context-sub">
-                    {selectedContextPRDs.length > 0
-                      ? `Pulling from ${selectedContextPRDs.length} past PRD${selectedContextPRDs.length > 1 ? 's' : ''}. Only what's lit feeds this generation.`
-                      : 'Start typing your problem and related PRDs will light up. Tap any to include.'}
-                  </p>
-                  <div className="memory-chips">
-                    {relatedPRDs.map(({ prd, score }) => {
-                      const included = isContextIncluded(prd, score);
-                      return (
-                        <button
-                          type="button"
-                          key={prd.id}
-                          className={`memory-chip ${included ? 'memory-chip-on' : ''}`}
-                          onClick={() => toggleContext(prd, included)}
-                          title={prd.title}
-                        >
-                          {included ? <Check size={14} /> : <Plus size={14} />}
-                          <span className="memory-chip-title">{prd.title}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
               {validationMessage && (
                 <div className="pm-validation-message">
                   <AlertCircle size={18} />
@@ -887,10 +856,49 @@ ${updateData}`;
 
               <form className="pm-form">
                 {fields.map(field => (
-                  <div key={field.key} className="form-group">
-                    <label className="form-label">{field.label}</label>
-                    <textarea className="form-input" placeholder={field.placeholder} rows={field.rows} value={formData[field.key] || ''} onChange={(e) => handleFormChange(field.key, e.target.value)} />
-                  </div>
+                  <React.Fragment key={field.key}>
+                    <div className="form-group">
+                      <label className="form-label">{field.label}</label>
+                      <textarea className="form-input" placeholder={field.placeholder} rows={field.rows} value={formData[field.key] || ''} onChange={(e) => handleFormChange(field.key, e.target.value)} />
+                    </div>
+
+                    {field.key === 'problem' && library.length > 0 && (
+                      <div className="memory-panel">
+                        <div className="memory-panel-header">
+                          <span className="memory-panel-title">
+                            <Brain size={15} />
+                            Otto&apos;s memory
+                          </span>
+                          <span className="memory-panel-count">{library.length} past PRD{library.length > 1 ? 's' : ''}</span>
+                        </div>
+                        <p className="memory-panel-sub">
+                          {!hasMemoryQuery
+                            ? 'As you describe the problem above, related past PRDs light up here. Tap any to fold it into this PRD.'
+                            : selectedContextPRDs.length > 0
+                              ? `${selectedContextPRDs.length} related PRD${selectedContextPRDs.length > 1 ? 's' : ''} will feed this generation. Tap to add or remove.`
+                              : 'No clear match yet — keep typing, or tap any past PRD to include it anyway.'}
+                        </p>
+                        <div className="memory-chips">
+                          {relatedPRDs.map(({ prd, score }) => {
+                            const included = isContextIncluded(prd, score);
+                            return (
+                              <button
+                                type="button"
+                                key={prd.id}
+                                className={`memory-chip ${included ? 'memory-chip-on' : ''}`}
+                                onClick={() => toggleContext(prd, included)}
+                                title={included ? `Remove "${prd.title}" from context` : `Add "${prd.title}" to context`}
+                                aria-pressed={included}
+                              >
+                                {included ? <Check size={14} /> : <Plus size={14} />}
+                                <span className="memory-chip-title">{prd.title}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </React.Fragment>
                 ))}
 
                 <button type="button" className="pm-button pm-button-primary" onClick={generatePRD} disabled={isGenerating}>
